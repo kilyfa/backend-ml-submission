@@ -3,7 +3,7 @@ const path = require("path");
 
 const loadModel = async () => {
   try {
-    const model = await tf.loadGraphModel(`file://models/model.json`);
+    const model = await tf.loadGraphModel(`https://storage.googleapis.com/model_ml_submission1/model.json`);
     console.log("Model berhasil dimuat!");
     return model;
   } catch (error) {
@@ -16,24 +16,15 @@ const predictImage = async (imagePath, model) => {
   try {
     const fs = require("fs");
 
-    // Membaca file gambar
     const imageBuffer = fs.readFileSync(imagePath);
 
-    // Decode gambar menjadi tensor dan lakukan preprocessing
-    const tensor = tf.node
-      .decodeImage(imageBuffer, 3) // Decode menjadi RGB tensor
-      .resizeNearestNeighbor([224, 224]) // Sesuaikan ukuran ke [224, 224]
-      .toFloat() // Konversi ke dtype float32 (wajib untuk model)
-      .expandDims(); // Tambahkan dimensi batch
+    const tensor = tf.node.decodeImage(imageBuffer, 3).resizeNearestNeighbor([224, 224]).toFloat().expandDims();
 
-    // Prediksi menggunakan model
     const prediction = model.predict(tensor);
-    const score = await prediction.data(); // Ambil hasil prediksi sebagai array
+    const score = await prediction.data();
 
-    // Ambil probabilitas maksimum dari hasil prediksi
     const value = Math.max(...score) * 100;
 
-    // Logika prediksi
     let suggestion, result;
 
     if (value > 50) {
@@ -44,7 +35,6 @@ const predictImage = async (imagePath, model) => {
       suggestion = "Penyakit kanker tidak terdeteksi.";
     }
 
-    // Kembalikan hasil prediksi
     return { suggestion, result, probability: value };
   } catch (error) {
     console.error("Gagal memproses gambar:", error);

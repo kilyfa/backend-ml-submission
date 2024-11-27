@@ -17,7 +17,7 @@ let model;
   try {
     model = await loadModel();
   } catch (error) {
-    console.error("Gagal memuat model:", error);
+    console.error("Failed to load model:", error);
     process.exit(1);
   }
 })();
@@ -29,7 +29,7 @@ app.post("/predict", upload.single("image"), async (req, res) => {
     if (!file) {
       return res.status(400).json({
         status: "fail",
-        message: "File gambar tidak ditemukan.",
+        message: "File not found.",
       });
     }
 
@@ -50,15 +50,15 @@ app.post("/predict", upload.single("image"), async (req, res) => {
         fs.unlinkSync(file.path);
         return res.status(400).json({
           status: "fail",
-          message: "Terjadi kesalahan dalam melakukan prediksi.",
+          message: "Error occurred during prediction.",
         });
       }
     } catch (error) {
-      console.error("Error validasi gambar:", error.message);
+      console.error("Image validation error:", error.message);
       fs.unlinkSync(file.path);
       return res.status(400).json({
         status: "fail",
-        message: "Terjadi kesalahan dalam melakukan prediksi.",
+        message: "Error occurred during prediction.",
       });
     }
 
@@ -70,6 +70,7 @@ app.post("/predict", upload.single("image"), async (req, res) => {
       id: predictionId,
       result: result.result,
       suggestion: result.suggestion,
+      probability: result.probability,
       createdAt: new Date().toISOString(),
     };
 
@@ -77,16 +78,16 @@ app.post("/predict", upload.single("image"), async (req, res) => {
 
     fs.unlinkSync(imagePath);
 
-    return res.status(200).json({
+    return res.status(201).json({
       status: "success",
-      message: "Prediksi berhasil dilakukan",
+      message: "Model is predicted successfully",
       data: predictionData,
     });
   } catch (error) {
-    console.error("Error saat melakukan prediksi:", error.message);
-    return res.status(400).json({
+    console.error("Prediction error:", error.message);
+    return res.status(500).json({
       status: "fail",
-      message: "Terjadi kesalahan dalam melakukan prediksi.",
+      message: "Error occurred during prediction.",
     });
   }
 });
@@ -116,15 +117,15 @@ app.get("/predict/histories", async (req, res) => {
       data: histories,
     });
   } catch (error) {
-    console.error("Error mendapatkan data riwayat prediksi:", error.message);
+    console.error("Error fetching prediction history:", error.message);
     return res.status(500).json({
       status: "fail",
-      message: "Terjadi kesalahan saat mengambil data riwayat prediksi.",
+      message: "Error occurred while retrieving prediction history.",
     });
   }
 });
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server berjalan pada http://0.0.0.0:${PORT}`);
+  console.log(`Server is running at http://0.0.0.0:${PORT}`);
 });
