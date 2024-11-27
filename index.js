@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const { loadModel, predictImage } = require("./models/loadModel");
 const db = require("./firebase");
+const { v4: uuidv4 } = require("uuid");
 
 const app = express();
 
@@ -50,7 +51,7 @@ app.post("/predict", upload.single("image"), async (req, res) => {
         fs.unlinkSync(file.path);
         return res.status(400).json({
           status: "fail",
-          message: "Error occurred during prediction.",
+          message: "Terjadi kesalahan dalam melakukan prediksi",
         });
       }
     } catch (error) {
@@ -58,19 +59,18 @@ app.post("/predict", upload.single("image"), async (req, res) => {
       fs.unlinkSync(file.path);
       return res.status(400).json({
         status: "fail",
-        message: "Error occurred during prediction.",
+        message: "Terjadi kesalahan dalam melakukan prediksi",
       });
     }
 
     const imagePath = file.path;
     const result = await predictImage(imagePath, model);
 
-    const predictionId = result.id || path.basename(file.path);
+    const predictionId = uuidv4();
     const predictionData = {
       id: predictionId,
       result: result.result,
       suggestion: result.suggestion,
-      probability: result.probability,
       createdAt: new Date().toISOString(),
     };
 
@@ -85,9 +85,9 @@ app.post("/predict", upload.single("image"), async (req, res) => {
     });
   } catch (error) {
     console.error("Prediction error:", error.message);
-    return res.status(500).json({
+    return res.status(400).json({
       status: "fail",
-      message: "Error occurred during prediction.",
+      message: "Terjadi kesalahan dalam melakukan prediksi",
     });
   }
 });
